@@ -13078,6 +13078,7 @@ div#notebook {
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Django-and-Django-rest">Django and Django-rest<a class="anchor-link" href="#Django-and-Django-rest">&#182;</a></h1><p>Explain the differences, and what we are currently doing in Solvestack</p>
+<p>Today's lecture borrows code from the book <strong>Django 3 By Example</strong> written by <em>Antonio Mele</em>.  We will go over how to start creating a blog application.  We will review concepts we've discussed before, go over code started for a blog application, and play with different list and detail views within the blog app.</p>
 
 </div>
 </div>
@@ -13085,7 +13086,14 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Review">Review<a class="anchor-link" href="#Review">&#182;</a></h1><h2 id="Terms">Terms<a class="anchor-link" href="#Terms">&#182;</a></h2><p><em>Project</em></p>
+<h1 id="Review">Review<a class="anchor-link" href="#Review">&#182;</a></h1><h2 id="Needed-packages">Needed packages<a class="anchor-link" href="#Needed-packages">&#182;</a></h2><p>These packages need to be installed for the code we are running today:</p>
+
+<pre><code>pip install django</code></pre>
+<h3 id="Optional-packages">Optional packages<a class="anchor-link" href="#Optional-packages">&#182;</a></h3><p>These are not needed for this project, but can make data exploration fun.  Jupyter can be used to read the original version of this file.</p>
+
+<pre><code>pip install jupyter
+pip install pandas</code></pre>
+<h2 id="Terms">Terms<a class="anchor-link" href="#Terms">&#182;</a></h2><p><em>Project</em></p>
 <p><em>Application</em></p>
 <p><em>ORM</em></p>
 <p><em>Queryset</em></p>
@@ -13099,17 +13107,17 @@ div#notebook {
       wsgi.py
       settings.py
       urls.py</code></pre>
-<h3 id="project-root">project root<a class="anchor-link" href="#project-root">&#182;</a></h3><ul>
+<h3 id="Project-root-folder">Project <code>root</code> folder<a class="anchor-link" href="#Project-root-folder">&#182;</a></h3><ul>
 <li><code>manage.py</code> The command line utiility we have used to interact with the ORM.  It is used for generating boilerplate project code, migrating databases, and many other things.</li>
 </ul>
-<h3 id="mysite-folder">mysite folder<a class="anchor-link" href="#mysite-folder">&#182;</a></h3><ul>
+<h3 id="mysite-subfolder"><code>mysite</code> subfolder<a class="anchor-link" href="#mysite-subfolder">&#182;</a></h3><ul>
 <li><code>__init__.py</code> Used by Python to recognize the folder as a Python module</li>
 <li><code>asgi.py</code> Allows for configuring a standard being used for asynchronous web servers/apps</li>
 <li><code>settings.py</code> Project settings and configuration</li>
 <li><code>urls.py</code> URLs here map to views</li>
 <li><code>wsgi.py</code> Used to run projects as Web Server Gateway Interface apps</li>
 </ul>
-<h1 id="Intro-to-blog-app">Intro to blog app<a class="anchor-link" href="#Intro-to-blog-app">&#182;</a></h1><h2 id="Blog-app-files">Blog app files<a class="anchor-link" href="#Blog-app-files">&#182;</a></h2><p>These files are generated when creating a new application in your Django project with <code>python manage.py startapp blog</code></p>
+<h1 id="Intro-to-blog-app">Intro to blog app<a class="anchor-link" href="#Intro-to-blog-app">&#182;</a></h1><h2 id="Blog-app-files">Blog app files<a class="anchor-link" href="#Blog-app-files">&#182;</a></h2><p>These files are generated when creating a new application in your Django project with <code>python manage.py startapp blog</code>.  A subfolder named <code>blog</code> will be created with the files below:</p>
 <ul>
 <li><code>admin.py</code> Models can be added here to pop up in the django administration site.  Using the admin site is not required.</li>
 <li><code>apps.py</code> Main configuration of the blog app</li>
@@ -13136,8 +13144,29 @@ div#notebook {
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="Build-on-ORM">Build on ORM<a class="anchor-link" href="#Build-on-ORM">&#182;</a></h1><ul>
-<li>Explain how model managers work (will increase knowledge of ORM)</li>
+<h1 id="Additional-ORM-concepts">Additional ORM concepts<a class="anchor-link" href="#Additional-ORM-concepts">&#182;</a></h1><h2 id="Models">Models<a class="anchor-link" href="#Models">&#182;</a></h2><p>Models are subclasses of <code>django.db.models.Model</code>, which means they follow a certain format we can use to easily manage data</p>
+<ul>
+<li>Django looks through the <code>models.py</code> files and creates tables for each model it finds in there</li>
+<li>Django uses this to create the API we have used to query databases in past lectures (<code>python manage.py shell</code>)</li>
+</ul>
+<h2 id="Post-model">Post model<a class="anchor-link" href="#Post-model">&#182;</a></h2><h3 id="Fields">Fields<a class="anchor-link" href="#Fields">&#182;</a></h3><p>This is defined in the <code>blog/models.py</code> file.  Additional information on fields can be found here: <a href="https://docs.djangoproject.com/en/3.0/ref/models/fields/">https://docs.djangoproject.com/en/3.0/ref/models/fields/</a>.</p>
+<p>The fields we have are:</p>
+<ul>
+<li><code>title</code> Used for blog title posts</li>
+<li><code>slug</code> This field is used to create unique seo-friendly URLs for blog posts<blockquote><p><code>unique_for_date</code> is used so that URLs are built with the <code>slug</code> and <code>publish</code> date</p>
+</blockquote>
+</li>
+<li><code>author</code> is a many-to-one relationship.  Each post can only be written by one user, but a user can write any number of posts.<blockquote><p><code>on_delete</code> parameter tells Django what to do in the db when an object is deleted.  <code>CASCADE</code> will create a behavior here where if a user is deleted, the db will also delete all related posts by them. For more information on this, see: <a href="https://docs.djangoproject.com/en/3.0/ref/models/fields/#django.db.models.ForeignKey.on_delete">https://docs.djangoproject.com/en/3.0/ref/models/fields/#django.db.models.ForeignKey.on_delete</a></p>
+</blockquote>
+</li>
+<li><code>body</code> Body text of the post</li>
+<li><code>publish</code> Uses Django's timezone <code>now</code> is used.  It's like Python's datetime.now method, but it's timezone aware.</li>
+<li><code>created</code> This is the time the post was created.  <code>auto_now_add</code> saves the date automatically</li>
+<li><code>updated</code> The last time the post updated</li>
+<li><code>status</code> Uses the <code>choices</code> parameter to limit choices</li>
+</ul>
+<p>After creating this model, it is activated by adding it to the list of <code>INSTALLED_APPS</code> in the <code>settings.py</code> file</p>
+<ul>
 <li>You can also define custom managers for your models.</li>
 <li>You can add extra manager methods to an existing manager, or create a new manager by modifying the initial QuerySet that the manager returns</li>
 <li>The first manager declared in a model becomes the default manager. You can use the Meta attribute default_manager_name to specify a different default manager. If no manager is defined in the model, Django automatically creates the objects default manager for it. If you declare any managers for your model but you want to keep the objects manager as well, you have to add it explicitly to your model</li>
