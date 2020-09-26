@@ -13078,7 +13078,7 @@ div#notebook {
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h1 id="Solvestack,-Django-rest,-and-Django">Solvestack, Django-rest, and Django<a class="anchor-link" href="#Solvestack,-Django-rest,-and-Django">&#182;</a></h1><p>Explain the differences, and what we are currently doing in Solvestack</p>
-<h1 id="Today">Today<a class="anchor-link" href="#Today">&#182;</a></h1><p>Based off of Solvestack community feedback, there was interest in building portfolio web apps.  This lecture uses code from the book <strong>Django 3 By Example</strong> written by <em>Antonio Mele</em>.  We will go over how to start creating a blog application.  This will allow us to strengthen concepts we're applying to Solvestack while giving others a chance to learn ways to build out their portfolio.  This is a quick, useful project that they could push to their own website.</p>
+<h1 id="Today">Today<a class="anchor-link" href="#Today">&#182;</a></h1><p>Based off of Solvestack community feedback, there was interest in building portfolio web apps.  This lecture uses code from the book <strong>Django 3 By Example</strong> by <em>Antonio Mele</em>.  We will go over how to start creating a blog application.  This will allow us to strengthen concepts we're applying to Solvestack while giving others a chance to learn ways to build out their portfolio.  This is a quick, useful project that anyone learn from to create their own website.  It also will look nice on one's github ;)</p>
 <p>First we will review concepts we've discussed before.  Then we'll go over the code started for a blog application, and play with different list and detail views within the blog app.</p>
 
 </div>
@@ -13263,9 +13263,58 @@ def post_list(request):
 <li>The function <code>get_object_or_404()</code> retreives the post.  It looks for the given parameters or a HTTP 404 not found error</li>
 </ul>
 </blockquote>
-<h2 id="Adding-URL-patterns">Adding URL patterns<a class="anchor-link" href="#Adding-URL-patterns">&#182;</a></h2><ul>
-<li>Canonical URLs</li>
+<h2 id="Adding-URL-patterns">Adding URL patterns<a class="anchor-link" href="#Adding-URL-patterns">&#182;</a></h2><p>URL patterns map URLs to views.  They are made of:</p>
+<ol>
+<li>A string pattern</li>
+<li>A view</li>
+<li>(optional) a name that lets you name the URL project-wide</li>
+</ol>
+<p>We have a file called <code>blog/urls.py</code> used to specify our URL patterns</p>
+
+<pre><code>from django.urls import path
+from . import views
+app_name = 'blog'
+urlpatterns = [
+    # post views
+    path('', views.post_list, name='post_list'),
+    path('&lt;int:year&gt;/&lt;int:month&gt;/&lt;int:day&gt;/&lt;slug:post&gt;/',
+         views.post_detail,
+         name='post_detail'),
+]</code></pre>
+<ul>
+<li>The <code>app_name</code> variable is the application namespace</li>
+<li>This means you can organize URLs by application, using their name
+### Paths and converters</li>
+<li>two different patterns are defined using the <code>path()</code> function here</li>
+<li>the 1st is mapped to the <code>post_list</code> view</li>
+<li>the 2nd takes 4 arguments:<ul>
+<li><code>year</code></li>
+<li><code>month</code></li>
+<li><code>day</code></li>
+<li><code>post</code></li>
 </ul>
+</li>
+<li>Angled brackets &lt;&gt; are used to capture values from the URL<blockquote><p><code>&lt;parameter&gt;</code> is captured as a string.  <code>&lt;int:year&gt;</code> specifies and matches an integer value, and <code>&lt;slug:post&gt;</code> is used to match a slug.  Additional info: <a href="https://docs.djangoproject.com/en/3.0/topics/http/urls/#path-converters">https://docs.djangoproject.com/en/3.0/topics/http/urls/#path-converters</a></p>
+</blockquote>
+</li>
+</ul>
+<p><code>re_path()</code> can be used to define complex patterns with regular expressions
+<a href="https://docs.djangoproject.com/en/3.0/ref/urls/#django.urls.re_path">https://docs.djangoproject.com/en/3.0/ref/urls/#django.urls.re_path</a></p>
+<p>Having a <code>urls.py</code> file in each application makes them easier to reuse</p>
+<p>The last thing needed is to include the URL patterns of the <code>blog</code> application in the main URL pattern for the project.  We have this in <code>mysite/urls.py</code></p>
+
+<pre><code>from django.urls import path, include
+from django.contrib import admin
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('blog/', include('blog.urls', namespace='blog')),
+]</code></pre>
+<p>This will make it so that the urls are found on the <code>blog/</code> path of the site.</p>
+<blockquote><p>Your <code>namespace</code> names must be unique
+More info at:
+<a href="https://docs.djangoproject.com/en/3.0/topics/http/urls/#url-namespaces">https://docs.djangoproject.com/en/3.0/topics/http/urls/#url-namespaces</a></p>
+<h3 id="Canonical-URLs">Canonical URLs<a class="anchor-link" href="#Canonical-URLs">&#182;</a></h3>
+</blockquote>
 
 </div>
 </div>
@@ -13273,19 +13322,36 @@ def post_list(request):
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="View-Templates">View Templates<a class="anchor-link" href="#View-Templates">&#182;</a></h1><ul>
-<li>Creating templates for views</li>
-<li>Templates define how the data is displayed; they are usually written in HTML in combination with the Django template language. You can find more information about the Django template language at <a href="https://docs.djangoproject.com/en/3.0/ref/templates/language/">https://docs.djangoproject.com/en/3.0/ref/templates/language/</a>.</li>
-<li>The base.html file will include the main HTML structure of the website and divide the content into the main content area and a sidebar. The list.html and detail.html files will inherit from the base.html file to render the blog post list and detail views, respectively.</li>
-<li>Django has a powerful template language that allows you to specify how data is displayed. It is based on template tags, template variables, and template filters:</li>
+<h1 id="View-Templates">View Templates<a class="anchor-link" href="#View-Templates">&#182;</a></h1><p>Templates define how the data is displayed.  They are a combo of HTML and the Django template language: <a href="https://docs.djangoproject.com/en/3.0/ref/templates/language/">https://docs.djangoproject.com/en/3.0/ref/templates/language/</a></p>
+<p>The templates files used in this project are:</p>
+
+<pre><code>templates/
+    blog/
+        base.html
+        post/
+            list.html
+            detail.html</code></pre>
+<ul>
+<li>The <code>base.html</code> the main HTML structure of the website</li>
+<li><code>list.html</code> and <code>detail.html</code> files will inherit from the <code>base.html</code> file to render the blog post list and detail views</li>
+<li>Django's template language allows you to specify how data is displayed. This is done with:<ul>
 <li>Template tags control the rendering of the template and look like {% tag %}</li>
 <li>Template variables get replaced with values when the template is rendered and look like {{ variable }}</li>
 <li>Template filters allow you to modify variables for display and look like {{ variable|filter }}.</li>
-<li>You can see all built-in template tags and filters at <a href="https://docs.djangoproject.com/en/3.0/ref/templates/builtins/">https://docs.djangoproject.com/en/3.0/ref/templates/builtins/</a>.</li>
+</ul>
+</li>
+</ul>
+<p>Built-in template tags and filters:
+<a href="https://docs.djangoproject.com/en/3.0/ref/templates/builtins/">https://docs.djangoproject.com/en/3.0/ref/templates/builtins/</a>.</p>
+<ul>
 <li>{% load static %} tells Django to load the static template tags that are provided by the django.contrib.staticfiles application, which is contained in the INSTALLED_APPS setting. After loading them, you are able to use the {% static %} template tag throughout this template. With this template tag, you can include the static files, such as the blog.css file</li>
 <li>there are two {% block %} tags. These tell Django that you want to define a block in that area. Templates that inherit from this template can fill in the blocks with content.</li>
 <li>With the {% extends %} template tag, you tell Django to inherit from the blog/base.html template.</li>
 </ul>
+<p>To see this in action:</p>
+<ul>
+<li>run <code>python manage.py runserver</code> and then navigate to <a href="http://127.0.0.1:8000/blog/">http://127.0.0.1:8000/blog/</a></li>
+</ul>
 
 </div>
 </div>
@@ -13293,8 +13359,8 @@ def post_list(request):
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div><div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1 id="What-the-class-wants">What the class wants<a class="anchor-link" href="#What-the-class-wants">&#182;</a></h1><ul>
-<li>Personalize views - start creating things people in the class want to create</li>
+<h1 id="What-would-you-like-to-do?">What would you like to do?<a class="anchor-link" href="#What-would-you-like-to-do?">&#182;</a></h1><ul>
+<li>We could start to think of personalized views, and start creating things people in the class want to create</li>
 </ul>
 
 </div>
