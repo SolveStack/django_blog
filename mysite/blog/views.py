@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404
-from .models import Post
+from .models import Post, Comment
 
 def post_list(request):
     posts = Post.published.all()
@@ -11,4 +11,4 @@ def post_detail(request, year, month, day, post):
                                 publish__year=year,
                                 publish__month=month,
                                 publish__day=day)
-    return render(request, 'blog/post/detail.html', {'post': post})
+    return render(request, 'blog/post/detail.html', {'post': post, 'comments': Comment.objects.filter(post=post)})

@@ -1,0 +1,20 @@
+{% extends "blog/base.html" %}
+{% block title %}My Blog{% endblock %}
+{% block content %}
+{{ post.title }}
+  <h1>Blog</h1>
+  {{ post.body|truncatewords:30|linebreaks }}
+  comments:
+  {% for comment in comments %}
+    <h2>
+      <a href="{{ post.get_absolute_url }}">
+        {{ comment.body }}
+      </a>
+    </h2>
+    {% endfor %}
+    <p class="date">
+      Published {{ post.publish }} by {{ post.author }}
+    </p>
+    
+  
+{% endblock %}
